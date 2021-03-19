@@ -17,7 +17,6 @@ from flask import Flask, request, render_template, g, redirect, Response
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
-
 #
 # The following is a dummy URI that does not connect to a valid database. You will need to modify it to connect to your Part 2 database in order to use the data.
 #
@@ -45,10 +44,6 @@ engine.execute("""CREATE TABLE IF NOT EXISTS test (
   name text
 );""")
 engine.execute("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');""")
-
-a;jeo;ijaoi;werjo;i
-waerawer
-awerwerewrwerewwer
 
 @app.before_request
 def before_request():
