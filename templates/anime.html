@@ -10,7 +10,7 @@
     <h1>Reviews</h1>
     <span>
       {% if g.account %}
-        <a class="action" href="write.html">Write</a>
+        <a class="action" href={{write_url}}>Write</a>
       {% endif %}
     </span>
   </header>
@@ -26,7 +26,7 @@
     <h1>Comments</h1>
     <span>
       {% if g.account %}
-        <a class="action" href="post.html">Post</a>
+        <a class="action" href={{post_url}}>Post</a>
       {% endif %}
     </span>
   </header>
