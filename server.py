@@ -304,7 +304,7 @@ def create():
     anime_id = request.args.get('anime_id')
     return render_template('write.html', anime_id=anime_id)
 
-@app.route('/recommendations', methods=('POST'))
+@app.route('/recommendations', methods=['POST'])
 def recommend_animes():
     if request.method == 'POST':
         genres = request.form['genres']
@@ -322,22 +322,22 @@ def recommend_animes():
             g.conn.execute(text('INSERT INTO #BaddGenres :b'), b=badgenre)
 
         recommendedAnimes = g.conn.execute(text(
-              ' SELECT anime_name, anime_id,
-              FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre
-              WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres)
-              GROUP BY anime_name, anime_id
-              ORDER BY COUNT(anime_genre) )
-              GROUP BY anime_name, anime_id '
+              ' SELECT anime_name, anime_id '
+              ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre '
+              ' WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres) '
+              ' GROUP BY anime_name, anime_id '
+              ' ORDER BY COUNT(anime_genre) ) '
+              ' GROUP BY anime_name, anime_id '
           ), y=minNum
           ).fetchall()
 
         animeIDs = g.conn.execute(text(
-              ' SELECT anime_id,
-              FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre
-              WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres)
-              GROUP BY anime_name, anime_id
-              ORDER BY COUNT(anime_genre) )
-              GROUP BY anime_name, anime_id '
+              ' SELECT anime_id '
+              ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre '
+              ' WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres) '
+              ' GROUP BY anime_name, anime_id '
+              ' ORDER BY COUNT(anime_genre) ) '
+              ' GROUP BY anime_name, anime_id '
           ), y=minNum
           ).fetchall()
 
