@@ -267,8 +267,42 @@ def generate_page():
         ), x=anime_id
     ).fetchall()
 
-    return render_template('anime.html', anime=anime, reviews=reviews, comments=comments)
+    write_url = "write?anime_id=" + str(anime_id)
+    post_url = "post?anime_id=" + str(anime_id)
+    return render_template('anime.html', anime=anime, reviews=reviews, 
+      comments=comments, write_url=write_url, post_url=post_url)
 
+@app.route('/write', methods=('GET', 'POST'))
+def create():
+    if request.method == 'POST':
+        anime_id = request.form['anime_id']
+        text = request.form['text'].strip()
+        error = None
+
+        if not text:
+            error = 'Text is required.'
+
+        if error is not None:
+            flash(error)
+        else:
+            review_id = g.conn.execute(
+              'SELECT MAX(CAST(review_id AS INTEGER)) FROM review'
+            ).fetchone()
+            new_id = str(review_id['max'] + 1)
+
+            g.conn.execute(
+              'INSERT INTO review VALUES(%s, %s, FALSE)', new_id, text
+            )
+            g.conn.execute(
+              'INSERT INTO describes VALUES (%s, %s)', new_id, anime_id
+            )
+            g.conn.execute(
+              'INSERT INTO writes VALUES (%s, %s)', g.account['account_id'], new_id
+            )
+            return redirect('anime?anime_id=' + str(anime_id))
+
+    anime_id = request.args.get('anime_id')
+    return render_template('write.html', anime_id=anime_id)
 
 if __name__ == "__main__":
   import click
