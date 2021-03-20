@@ -252,19 +252,15 @@ def generate_page():
     ).fetchone()
 
     reviews = g.conn.execute(
-        text(
-            'SELECT *'
-            ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
-            ' WHERE anime_id = :x AND deleted = FALSE'
-        ), x=anime_id
+      'SELECT *'
+      ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
+      ' WHERE anime_id = %s AND deleted = FALSE', anime_id
     ).fetchall()
 
     comments = g.conn.execute(
-        text(
-            'SELECT *'
-            ' FROM anime NATURAL JOIN belongs NATURAL JOIN comment NATURAL JOIN posts'
-            ' WHERE anime_id = :x'
-        ), x=anime_id
+      'SELECT *'
+      ' FROM anime NATURAL JOIN belongs NATURAL JOIN comment NATURAL JOIN posts'
+      ' WHERE anime_id = %s', anime_id
     ).fetchall()
 
     write_url = "write?anime_id=" + str(anime_id)
@@ -358,7 +354,7 @@ def recommend_animes():
   listGenres = genres.split()
   excludeGenres = exclude.split()
   error = None
-  
+
   minNum = 0
   if minRating is None:
     minNum = float(minRating)
@@ -407,7 +403,33 @@ def recommend_animes():
     return render_template('recommendations.html', recommendedAnimes=recommendedAnimes, animeList=animeList)
   
   return redirect('index')
-      
+
+@app.route('/lookup', methods=['POST'])
+def lookup():
+  anime_in = request.form['anime_name'].strip()
+  error = None
+
+  if not anime_in:
+    error = 'Please enter an anime.'
+  
+  if error is not None:
+    flash(error, 'anime_in')
+  else:
+    anime = g.conn.execute(
+      'SELECT * FROM anime WHERE UPPER(anime_name) LIKE UPPER(%s)', '%'+anime_in+'%'
+    ).fetchall()
+    
+    if not anime:
+      error = '\"{}\" is not an Anime!'.format(anime_in)
+      flash(error, 'anime_in')
+      return redirect('index')
+    elif len(anime) == 1:
+      return redirect('/anime?anime_id={}'.format(anime[0][0]))
+    else:
+      return render_template('/anime_list.html', animes=anime, anime_in=anime_in)
+  
+  return redirect('index')
+
 if __name__ == "__main__":
   import click
 

@@ -8,7 +8,10 @@
   <form method="post">
     <label for="body">Text</label>
     <textarea name="text" maxlength="1000" id="body"></textarea>
-    Episode Number: <input type="number" name="episode">
+    <div>
+      <label for="ep_num">Episode Number:</label> 
+      <input type="number" name="episode" id="ep_num" style="width: 50px;">
+    </div>
     <input type="hidden" name="anime_id" value={{anime_id}}>
     <input type="submit" value="Submit">
   </form>

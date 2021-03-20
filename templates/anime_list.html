@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Results for {{anime_in}}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %} 
+  <ol>
+    {% for anime in animes %}
+    <li>
+      <a href={{ "/anime?anime_id={}".format(anime[0]) }}>{{anime[1]}}</a>
+      {{ " | {} | {}".format(anime[2], anime[3]) }}
+    </li>
+    {% endfor %}
+  </ol>
+{% endblock %} 
