@@ -12,7 +12,7 @@ import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response, flash, session
+from flask import Flask, request, render_template, g, redirect, Response, flash, session, url_for
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -63,7 +63,6 @@ def before_request():
     g.conn = None
 
   account_id = session.get('account_id')
-  print('\nAccount is ' + str(account_id))
 
   if account_id is None:
       g.account = None
@@ -112,6 +111,7 @@ def index():
 
   # DEBUG: this is debugging code to see what request looks like
   print(request.args)
+  print('\n')
 
   #
   # example of a database query
