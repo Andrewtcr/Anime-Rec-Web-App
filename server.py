@@ -268,17 +268,17 @@ def recommend_animes():
     g.conn.execute(text('CREATE TEMPORARY TABLE DesiredGenres (genre varchar(20) not null, primary key(genre))'))
     g.conn.execute(text('CREATE TEMPORARY TABLE BadGenres (genre varchar(20) not null, primary key(genre))'))
     for genre in listGenres:
-        g.conn.execute(text('INSERT INTO DesiredGenres :a'), a=genre)
+        g.conn.execute('INSERT INTO DesiredGenres VALUES(%s)', genre)
     for badgenre in excludeGenres:
         g.conn.execute(text('INSERT INTO BaddGenres :b'), b=badgenre)
 
     recommendedAnimes = g.conn.execute(text(
-          ' SELECT *'
-          ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre '
-          ' WHERE anime_genre IN DesiredGenres AND average_rating > :y AND anime_id NOT IN (BadGenres) '
-          ' GROUP BY anime_name, anime_id '
-          ' ORDER BY COUNT(anime_genre) ) '
-          ' GROUP BY anime_name, anime_id '
+          'SELECT *'
+          ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre'
+          ' WHERE anime_genre IN DesiredGenres AND average_rating > :y AND anime_id NOT IN (BadGenres)'
+          ' GROUP BY anime_name, anime_id'
+          ' ORDER BY COUNT(anime_genre) )'
+          ' GROUP BY anime_name, anime_id'
       ), y=minNum
       ).fetchall()
 
