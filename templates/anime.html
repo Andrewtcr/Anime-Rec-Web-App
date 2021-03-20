@@ -2,13 +2,18 @@
 
 {% block header %}
   <h1>{% block title %}{{anime['anime_name']}}{% endblock %}</h1>
-  {% if g.user %}
-    <a class="action" href="{{ url_for('blog.create') }}">New</a>
-  {% endif %}
+  <span>Rating: {{anime['avg_rating']}}/10</span>
 {% endblock %}
 
 {% block content %}
-  <h1>Reviews</h1>
+  <header>
+    <h1>Reviews</h1>
+    <span>
+      {% if g.account %}
+        <a class="action" href="write.html">Write</a>
+      {% endif %}
+    </span>
+  </header>
   {% for review in reviews %}
     <article class="post">
       <p class="body">{{ review['text'] }}</p>
@@ -17,7 +22,14 @@
       <hr>
     {% endif %}
   {% endfor %}
-  <h1>Comments</h1>
+  <header>
+    <h1>Comments</h1>
+    <span>
+      {% if g.account %}
+        <a class="action" href="post.html">Post</a>
+      {% endif %}
+    </span>
+  </header>
   {% for comment in comments %}
     <article class="post">
       <p class="body">{{ comment['text'] }}</p>

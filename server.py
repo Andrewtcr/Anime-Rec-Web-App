@@ -269,7 +269,6 @@ def generate_page():
 
     return render_template('anime.html', anime=anime, reviews=reviews, comments=comments)
 
-
 if __name__ == "__main__":
   import click
 
