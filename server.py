@@ -423,8 +423,6 @@ def lookup():
       error = '\"{}\" is not an Anime!'.format(anime_in)
       flash(error, 'anime_in')
       return redirect('index')
-    elif len(anime) == 1:
-      return redirect('/anime?anime_id={}'.format(anime[0][0]))
     else:
       return render_template('/anime_list.html', animes=anime, anime_in=anime_in)
   
