@@ -12,10 +12,11 @@ import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response
+from flask import Flask, request, render_template, g, redirect, Response, flash, session, url_for
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
+app.config.from_mapping(SECRET_KEY='dev')
 
 #
 # The following is a dummy URI that does not connect to a valid database. You will need to modify it to connect to your Part 2 database in order to use the data.
@@ -39,11 +40,11 @@ engine = create_engine(DATABASEURI)
 # Example of running queries in your database
 # Note that this will probably not work if you already have a table named 'test' in your database, containing meaningful data. This is only an example showing you how to run queries in your database using SQLAlchemy.
 #
-engine.execute("""CREATE TABLE IF NOT EXISTS test (
-  id serial,
-  name text
-);""")
-engine.execute("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');""")
+#engine.execute("""CREATE TABLE IF NOT EXISTS test (
+#  id serial,
+#  name text
+#);""")
+#engine.execute("""INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace');""")
 
 @app.before_request
 def before_request():
@@ -60,6 +61,15 @@ def before_request():
     print("uh oh, problem connecting to database")
     import traceback; traceback.print_exc()
     g.conn = None
+
+  account_id = session.get('account_id')
+
+  if account_id is None:
+      g.account = None
+  else:
+      g.account = g.conn.execute(text(
+          'SELECT * FROM account WHERE account_id = :x'), x=account_id
+      ).fetchone()
 
 @app.teardown_request
 def teardown_request(exception):
@@ -87,6 +97,7 @@ def teardown_request(exception):
 # see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 #
 @app.route('/')
+@app.route('/index')
 def index():
   """
   request is a special object that Flask provides to access web request information:
@@ -100,7 +111,7 @@ def index():
 
   # DEBUG: this is debugging code to see what request looks like
   print(request.args)
-
+  print('\n')
 
   #
   # example of a database query
@@ -166,12 +177,34 @@ def add():
   g.conn.execute('INSERT INTO test(name) VALUES (%s)', name)
   return redirect('/')
 
-
-@app.route('/login')
+@app.route('/login', methods=('GET', 'POST'))
 def login():
-    abort(401)
-    this_is_never_executed()
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        error = None
+        account = g.conn.execute(text(
+            'SELECT * FROM account WHERE email = :x'), x=email
+        ).fetchone()
 
+        if account is None:
+            error = 'Incorrect email.'
+        elif account['password'] != password:
+            error = 'Incorrect password.'
+
+        if error is None:
+            session.clear()
+            session['account_id'] = account['account_id']
+            return redirect('index')
+
+        flash(error)
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('index')
 
 if __name__ == "__main__":
   import click
