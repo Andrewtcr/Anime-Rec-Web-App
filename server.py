@@ -348,11 +348,11 @@ def post():
 
 @app.route('/search', methods=['POST'])
 def recommend_animes():
-  genres = request.form['genres']
-  exclude = request.form['exclude']
-  minRating = request.form['min_rating']
-  listGenres = genres.split()
-  excludeGenres = exclude.split()
+  genres = request.form['genres'].strip()
+  exclude = request.form['exclude'].strip()
+  minRating = request.form['min_rating'].strip()
+  listGenres = genres.split(", ")
+  excludeGenres = exclude.split(", ")
   error = None
 
   minNum = 0
