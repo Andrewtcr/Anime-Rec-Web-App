@@ -357,6 +357,7 @@ def recommend_animes():
   minRating = request.form['min_rating']
   listGenres = genres.split()
   excludeGenres = exclude.split()
+  error = None
   
   minNum = 0
   if minRating is None:
@@ -407,9 +408,6 @@ def recommend_animes():
   
   return redirect('index')
       
-
-    
-
 if __name__ == "__main__":
   import click
 
