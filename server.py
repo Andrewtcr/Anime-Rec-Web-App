@@ -349,6 +349,52 @@ def post():
 
     anime_id = request.args.get('anime_id')
     return render_template('post.html', anime_id=anime_id)
+@app.route('/recommendations', methods=['POST'])
+def recommend_animes():
+    if request.method == 'POST':
+        genres = request.form['genres']
+        exclude = request.form['exclude']
+        minRating = request.form['min_rating']
+        listGenres = genres.split()
+        excludeGenres = exclude.split()
+        minNum = float(minRating)
+    
+        g.conn.execute(text('CREATE TABLE #DesiredGenres (genre varchar(20) not null, primary key(genre))'))
+        g.conn.execute(text('CREATE TABLE #BadGenres (genre varchar(20) not null, primary key(genre))'))
+        for genre in listGenres:
+            g.conn.execute(text('INSERT INTO #DesiredGenres :a'), a=genre)
+        for badgenre in excludeGenres:
+            g.conn.execute(text('INSERT INTO #BaddGenres :b'), b=badgenre)
+
+        recommendedAnimes = g.conn.execute(text(
+              ' SELECT anime_name, anime_id '
+              ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre '
+              ' WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres) '
+              ' GROUP BY anime_name, anime_id '
+              ' ORDER BY COUNT(anime_genre) ) '
+              ' GROUP BY anime_name, anime_id '
+          ), y=minNum
+          ).fetchall()
+
+        animeIDs = g.conn.execute(text(
+              ' SELECT anime_id '
+              ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre '
+              ' WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres) '
+              ' GROUP BY anime_name, anime_id '
+              ' ORDER BY COUNT(anime_genre) ) '
+              ' GROUP BY anime_name, anime_id '
+          ), y=minNum
+          ).fetchall()
+
+        animeList = []
+        for ID in animeIDs:
+            animeUrl = 'anime?anime_id=' + str(ID)
+            animeList.append(animeUrl)
+
+        g.conn.execute(text('DROP TABLE #DesiredGenres'))
+        g.conn.execute(text('DROP TABLE #BadGenres'))
+
+    return render_template('recommendations.html', recommendedAnimes=recommendedAnimes, animeList=animeList)
 
 if __name__ == "__main__":
   import click
