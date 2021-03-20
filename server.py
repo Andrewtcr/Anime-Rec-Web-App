@@ -365,42 +365,27 @@ def recommend_animes():
   if error is not None:
     flash(error)
   else:
-    g.conn.execute(text('CREATE TABLE #DesiredGenres (genre varchar(20) not null, primary key(genre))'))
-    g.conn.execute(text('CREATE TABLE #BadGenres (genre varchar(20) not null, primary key(genre))'))
+    g.conn.execute(text('CREATE TEMPORARY TABLE DesiredGenres (genre varchar(20) not null, primary key(genre))'))
+    g.conn.execute(text('CREATE TEMPORARY TABLE BadGenres (genre varchar(20) not null, primary key(genre))'))
     for genre in listGenres:
-        g.conn.execute(text('INSERT INTO #DesiredGenres :a'), a=genre)
+        g.conn.execute(text('INSERT INTO DesiredGenres :a'), a=genre)
     for badgenre in excludeGenres:
-        g.conn.execute(text('INSERT INTO #BaddGenres :b'), b=badgenre)
+        g.conn.execute(text('INSERT INTO BaddGenres :b'), b=badgenre)
 
     recommendedAnimes = g.conn.execute(text(
-          ' SELECT anime_name, anime_id '
+          ' SELECT *'
           ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre '
-          ' WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres) '
+          ' WHERE anime_genre IN DesiredGenres AND average_rating > :y AND anime_id NOT IN (BadGenres) '
           ' GROUP BY anime_name, anime_id '
           ' ORDER BY COUNT(anime_genre) ) '
           ' GROUP BY anime_name, anime_id '
       ), y=minNum
       ).fetchall()
 
-    animeIDs = g.conn.execute(text(
-          ' SELECT anime_id '
-          ' FROM (SELECT anime_name, anime_id, COUNT(anime_genre) FROM anime NATURAL JOIN anime_genre '
-          ' WHERE anime_genre IN #DesiredGenres AND average_rating > :y AND anime_id NOT IN (#BadGenres) '
-          ' GROUP BY anime_name, anime_id '
-          ' ORDER BY COUNT(anime_genre) ) '
-          ' GROUP BY anime_name, anime_id '
-      ), y=minNum
-      ).fetchall()
+    g.conn.execute(text('DROP TABLE DesiredGenres'))
+    g.conn.execute(text('DROP TABLE BadGenres'))
 
-    animeList = []
-    for ID in animeIDs:
-        animeUrl = 'anime?anime_id=' + str(ID)
-        animeList.append(animeUrl)
-
-    g.conn.execute(text('DROP TABLE #DesiredGenres'))
-    g.conn.execute(text('DROP TABLE #BadGenres'))
-
-    return render_template('recommendations.html', recommendedAnimes=recommendedAnimes, animeList=animeList)
+    return render_template('recommendations.html', recommendedAnimes=recommendedAnimes)
   
   return redirect('index')
 
