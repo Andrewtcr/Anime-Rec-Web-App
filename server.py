@@ -242,6 +242,34 @@ def logout():
     session.clear()
     return redirect('index')
 
+@app.route('/anime') 
+def generate_page():
+    anime_id = request.args.get('anime_id')
+    anime = g.conn.execute(
+        text(
+            'SELECT * FROM anime WHERE anime_id = :x'
+        ), x=anime_id
+    ).fetchone()
+
+    reviews = g.conn.execute(
+        text(
+            'SELECT *'
+            ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
+            ' WHERE anime_id = :x AND deleted = FALSE'
+        ), x=anime_id
+    ).fetchall()
+
+    comments = g.conn.execute(
+        text(
+            'SELECT *'
+            ' FROM anime NATURAL JOIN belongs NATURAL JOIN comment NATURAL JOIN posts'
+            ' WHERE anime_id = :x'
+        ), x=anime_id
+    ).fetchall()
+
+    return render_template('anime.html', anime=anime, reviews=reviews, comments=comments)
+
+
 if __name__ == "__main__":
   import click
 
