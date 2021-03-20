@@ -183,8 +183,10 @@ def login():
         email = request.form['email']
         password = request.form['password']
         error = None
-        account = g.conn.execute(text(
-            'SELECT * FROM account WHERE email = :x'), x=email
+        account = g.conn.execute(
+          text(
+            'SELECT * FROM account WHERE email = :x'
+          ), x=email
         ).fetchone()
 
         if account is None:
@@ -200,6 +202,40 @@ def login():
         flash(error)
 
     return render_template('login.html')
+
+@app.route('/register', methods=('GET', 'POST'))
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        error = None
+
+        if not email:
+          error = 'Email is required.'
+        elif not password:
+          error = 'Password is required.'
+        elif g.conn.execute(
+          text(
+            'SELECT email FROM account WHERE email = :x'
+          ), x=email
+        ).fetchone() is not None:
+          error = 'Email {} is already registered.'.format(email)
+
+        if error is None:
+          max_id = g.conn.execute(
+            'SELECT MAX(account_id) FROM account'
+          ).fetchone()
+          new_id = max_id['max'] + 1
+          g.conn.execute(
+            text(
+              'INSERT INTO account VALUES (:x, :y, :z)'
+            ), x=new_id, y=email, z=password
+          )
+          return redirect('login')
+
+        flash(error)
+
+    return render_template('register.html')
 
 @app.route('/logout')
 def logout():
