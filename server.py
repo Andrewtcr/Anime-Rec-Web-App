@@ -273,7 +273,7 @@ def generate_page():
       comments=comments, write_url=write_url, post_url=post_url)
 
 @app.route('/write', methods=('GET', 'POST'))
-def create():
+def write():
     if request.method == 'POST':
         anime_id = request.form['anime_id']
         text = request.form['text'].strip()
@@ -303,6 +303,52 @@ def create():
 
     anime_id = request.args.get('anime_id')
     return render_template('write.html', anime_id=anime_id)
+
+@app.route('/post', methods=('GET', 'POST'))
+def post():
+    if request.method == 'POST':
+        anime_id = request.form['anime_id']
+        text = request.form['text'].strip()
+        episode = request.form['episode']
+        error = None
+
+        total_ep = g.conn.execute(
+          'SELECT num_episodes FROM anime WHERE anime_id=%s', anime_id
+        ).fetchone()['num_episodes']
+        if total_ep == 'Unknown':
+            error = 'Sorry, comments cannot be added to this anime.'
+            flash(error)
+            return render_template('post.html', anime_id=anime_id)
+
+        if not episode:
+            error = 'Episode number is required.'
+        elif int(episode) > int(total_ep) or int(episode) <= 0:
+            error = 'Episode does not exist.'
+
+        if not text:
+            error = 'Text is required.'
+
+        if error is not None:
+            flash(error)
+        else:
+            comment_id = g.conn.execute(
+              'SELECT MAX(CAST(comment_id AS INTEGER)) FROM comment'
+            ).fetchone()
+            new_id = str(comment_id['max'] + 1)
+
+            g.conn.execute(
+              'INSERT INTO comment VALUES(%s, %s)', new_id, text
+            )
+            g.conn.execute(
+              'INSERT INTO belongs VALUES (%s, %s, %s)', new_id, anime_id, int(episode)
+            )
+            g.conn.execute(
+              'INSERT INTO posts VALUES (%s, %s)', g.account['account_id'], new_id
+            )
+            return redirect('anime?anime_id=' + str(anime_id))
+
+    anime_id = request.args.get('anime_id')
+    return render_template('post.html', anime_id=anime_id)
 
 if __name__ == "__main__":
   import click

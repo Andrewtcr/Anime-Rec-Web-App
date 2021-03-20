@@ -32,6 +32,7 @@
   </header>
   {% for comment in comments %}
     <article class="post">
+      <b>Episode {{comment['episode']}}</b>
       <p class="body">{{ comment['text'] }}</p>
     </article>
     {% if not loop.last %}
