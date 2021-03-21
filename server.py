@@ -344,7 +344,7 @@ def del_review():
   if g.admin:
       admin_id = session.get('admin_id')
       if review_id:
-          g.conn.execute('INSERT INTO deletes VALUES(%s, %s)', review_id, admin_id)
+          g.conn.execute('INSERT INTO delete VALUES(%s, %s)', review_id, admin_id)
           g.conn.execute('UPDATE review SET deleted = TRUE WHERE review_id = %s', review_id)
       else:
           g.conn.execute('DELETE FROM comment WHERE comment_id = %s', comment_id)
@@ -445,16 +445,36 @@ def lookup():
   if error is not None:
     flash(error, 'anime_in')
   else:
-    anime = g.conn.execute(
-      'SELECT * FROM anime WHERE UPPER(anime_name) LIKE UPPER(%s)', '%'+anime_in+'%'
+    animes = g.conn.execute(
+      'SELECT * FROM anime WHERE UPPER(anime_name) LIKE UPPER(%s)'
+      ' ORDER BY CAST(anime_id AS INTEGER)', '%'+anime_in+'%'
     ).fetchall()
     
-    if not anime:
+    genres = g.conn.execute(
+      'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre'
+      ' WHERE UPPER(anime_name) LIKE UPPER(%s)'
+      ' ORDER BY CAST(anime_id AS INTEGER)', '%'+anime_in+'%'
+    ).fetchall()
+
+    print(animes)
+
+    x = []  
+    for row in animes:
+      s = ''
+      for genre in genres:
+        if row['anime_id'] == genre['anime_id']:
+          s += genre['genre'] + ', '
+      li = list(row)
+      li.append(s[:-2])
+      t = tuple(li)
+      x.append(t)
+
+    if not animes:
       error = '\"{}\" is not an Anime!'.format(anime_in)
       flash(error, 'anime_in')
       return redirect('index')
     else:
-      return render_template('/anime_list.html', animes=anime, anime_in=anime_in)
+      return render_template('/anime_list.html', animes=x, anime_in=anime_in)
   
   return redirect('index')
 
