@@ -23,11 +23,4 @@
     </tr>
     {% endfor %}
   </table>
-  <ol>
-    {% for anime in animes %}
-    <li>
-      <a href={{ "/anime?anime_id={}".format(anime[0]) }}>{{anime[1]}}</a>
-    </li>
-    {% endfor %}
-  </ol>
 {% endblock %} 
