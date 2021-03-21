@@ -179,31 +179,32 @@ def admin_login():
 
 @app.route('/anime') 
 def generate_page():
-    anime_id = request.args.get('anime_id')
-    anime = g.conn.execute(
-        text(
-            'SELECT * FROM anime WHERE anime_id = :x'
-        ), x=anime_id
-    )
+  anime_id = request.args.get('anime_id')
+  anime = g.conn.execute(
+    'SELECT * FROM anime WHERE anime_id = %s', anime_id
+  ).fetchone()
 
-    reviews = g.conn.execute(
-      'SELECT *'
-      ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
-      ' NATURAL JOIN account'
-      ' WHERE anime_id = %s AND deleted = FALSE', anime_id
-    )
+  print(type(anime))
+  print(anime['anime_id'])
 
-    comments = g.conn.execute(
-      'SELECT *'
-      ' FROM anime NATURAL JOIN belongs NATURAL JOIN comment NATURAL JOIN posts'
-      ' NATURAL JOIN account'
-      ' WHERE anime_id = %s', anime_id
-    )
+  reviews = g.conn.execute(
+    'SELECT *'
+    ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
+    ' NATURAL JOIN account'
+    ' WHERE anime_id = %s AND deleted = FALSE', anime_id
+  )
 
-    write_url = "write?anime_id=" + str(anime_id)
-    post_url = "post?anime_id=" + str(anime_id)
-    return render_template('anime.html', anime=anime, reviews=reviews, 
-      comments=comments, write_url=write_url, post_url=post_url)
+  comments = g.conn.execute(
+    'SELECT *'
+    ' FROM anime NATURAL JOIN belongs NATURAL JOIN comment NATURAL JOIN posts'
+    ' NATURAL JOIN account'
+    ' WHERE anime_id = %s', anime_id
+  )
+
+  write_url = "write?anime_id=" + str(anime_id)
+  post_url = "post?anime_id=" + str(anime_id)
+  return render_template('anime.html', anime=anime, reviews=reviews, 
+    comments=comments, write_url=write_url, post_url=post_url)
 
 @app.route('/rate', methods=['POST'])
 def rate():
@@ -348,6 +349,14 @@ def delete():
 def edit():
   review_id = request.args.get('review_id')
   comment_id = request.args.get('comment_id')
+  
+  if review_id:
+    review = g.conn.execute(
+      'SELECT * FROM review NATURAL JOIN describes'
+      ' WHERE review = %s AND deleted = FALSE', review_id
+    )
+    render_template('edit.html', text=review['text'])
+
 
 @app.route('/search', methods=['POST'])
 def recommend_animes():

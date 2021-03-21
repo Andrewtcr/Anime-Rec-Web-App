@@ -23,8 +23,8 @@
       <input type="submit" value="Favorite this anime!">
     </div>
   </form>
-
   {% endif %}
+
   <header>
     <h1>Reviews</h1>
     <span>
@@ -38,8 +38,11 @@
       <p class="body">{{ review['text'] }}</p>
       <i>{{ review['email'] }}</i>
       {% if g.admin or g.account['account_id'] == review['account_id'] %}
-        <a href={{ "/edit?review_id=".format(review['review_id']) }}>Edit</a> | 
-        <a href={{ "/delete?review_id=".format(review['review_id']) }}>Delete</a>
+        <a href={{ "/edit?review_id={}".format(review['review_id']) }}>Edit</a> |
+        <a href={{ "/delete?review_id={}".format(review['review_id']) }}>Delete</a>
+        <form method="POST">
+          <input type="hidden" name="anime_id" value={{anime['anime_id']}}>
+        </form>
       {% endif %}
     </article>
     {% if not loop.last %}
@@ -53,19 +56,19 @@
         <a class="action" href={{post_url}}>Post</a>
       {% endif %}
     </span>
-  </header>
+  </header> 
   {% for comment in comments %}
     <article class="post">
       <b>Episode {{comment['episode']}}</b>
       <p class="body">{{ comment['text'] }}</p>
       <i>{{ comment['email'] }}</i>
       {% if g.admin or g.account['account_id'] == comment['account_id'] %}
-        <a href={{ "/edit?comment_id=".format(comment['comment_id']) }}>Edit</a> | 
-        <a href={{ "/delete?comment_id=".format(comment['comment_id']) }}>Delete</a>
+        <a href={{ "/edit?comment_id={}".format(comment['comment_id']) }}>Edit</a> | 
+        <a href={{ "/delete?comment_id={}".format(comment['comment_id']) }}>Delete</a>
       {% endif %}
     </article>
     {% if not loop.last %}
       <hr>
     {% endif %}
-  {% endfor %}
+  {% endfor %} 
 {% endblock %}

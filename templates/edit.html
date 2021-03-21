@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Edit Review{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="body">Text</label>
+    <textarea name="text" maxlength="1000" id="body" value=text></textarea>
+    <input type="submit" value="Submit">
+  </form>
+{% endblock %}

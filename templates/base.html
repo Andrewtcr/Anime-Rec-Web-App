@@ -34,12 +34,12 @@
   <ul>
     {% if g.account %}
       <li><span>{{ g.account['email'] }}</span>
+      <li><a href="view_favorites">Favorite</a> 
       <li><a href="logout">Log Out</a>
     {% elif g.admin %}
       <li><a href="myadmin">MyAdmin</a></li>
       <li><a href="logout">Log Out</a>
     {% else %}
-      <li><a href="view_favorites">Favorite</a> 
       <li><a href="register">Register</a>
       <li><a href="login">Log In</a>
     {% endif %}
