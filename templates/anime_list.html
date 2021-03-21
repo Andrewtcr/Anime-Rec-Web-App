@@ -9,7 +9,6 @@
     {% for anime in animes %}
     <li>
       <a href={{ "/anime?anime_id={}".format(anime[0]) }}>{{anime[1]}}</a>
-      {{ " | {} | {}".format(anime[2], anime[3]) }}
     </li>
     {% endfor %}
   </ol>

@@ -168,6 +168,43 @@ def generate_page():
     return render_template('anime.html', anime=anime, reviews=reviews, 
       comments=comments, write_url=write_url, post_url=post_url)
 
+@app.route('/rate', methods=['POST'])
+def rate():
+  rating = request.form['rating']
+  anime_id = str(request.form['anime_id'])
+  msg = 'Your rating of {} has been submitted!'.format(rating)
+
+  # update ratings in rates
+  if g.conn.execute(
+      'SELECT account_id FROM rates WHERE anime_id = %s AND account_id = %s', anime_id, 
+      g.account['account_id']
+    ).fetchone() is not None:
+    g.conn.execute(
+      'UPDATE rates SET rating = %s WHERE anime_id = %s AND account_id = %s', rating,
+      anime_id, g.account['account_id']
+    )
+  else:
+    g.conn.execute(
+      'INSERT INTO rates VALUES (%s, %s, %s)', g.account['account_id'], anime_id, rating
+    )
+  
+  # calculate new avg
+  avg = g.conn.execute(
+    'SELECT AVG(rating) AS avg FROM rates WHERE anime_id = %s GROUP BY anime_id', anime_id
+  ).fetchone()
+
+  if not avg: # replace default value (no account rating records)
+    avg = rating
+  else: 
+    avg = avg['avg']
+
+  # update avg_rating in anime
+  g.conn.execute(
+    'UPDATE anime SET avg_rating = %s', str(avg)
+  )
+  flash(msg)
+  return redirect('anime?anime_id={}'.format(anime_id))
+
 @app.route('/write', methods=('GET', 'POST'))
 def write():
     if request.method == 'POST':
