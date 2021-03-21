@@ -63,8 +63,18 @@
       <p class="body">{{ comment['text'] }}</p>
       <i>{{ comment['email'] }}</i>
       {% if g.admin or g.account['account_id'] == comment['account_id'] %}
+<<<<<<< HEAD
         <a href={{ "/edit?comment_id={}".format(comment['comment_id']) }}>Edit</a> | 
         <a href={{ "/delete?comment_id={}".format(comment['comment_id']) }}>Delete</a>
+=======
+        <a href={{ "/edit?comment_id=".format(comment['comment_id']) }}>Edit</a> | 
+        <a href={{ "/delete?comment_id=".format(comment['comment_id']) }}>Delete</a>
+        <form method="POST" action="/favorite">
+          <div>
+            <input type="hidden" name="anime_id" value={{ anime['anime_id'] }}>
+          </div>
+        </form>
+>>>>>>> 44136010dbddd888b664f455dd9aa22cb93c68cc
       {% endif %}
     </article>
     {% if not loop.last %}
