@@ -15,6 +15,15 @@
       <input type="submit" value="Submit">
     </div>
   </form>
+
+  <form method="POST" action="/favorite">
+    <div>
+      <input type="hidden" name="anime_id" value={{ anime['anime_id'] }}>
+      <input type="hidden" name="name" value={{ anime['anime_name'] }}>
+      <input type="submit" value="Favorite this anime!">
+    </div>
+  </form>
+
   {% endif %}
   <header>
     <h1>Reviews</h1>
