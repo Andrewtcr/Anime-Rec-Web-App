@@ -6,6 +6,16 @@
 {% endblock %}
 
 {% block content %}
+  {% if g.account %}
+  <form method="POST" action="/rate">
+    <div>
+      <label for="rate">Rate(0 to 10):</label> 
+      <input type="range" name="rating" id="rate" min="0" max="10">
+      <input type="hidden" name="anime_id" value={{ anime['anime_id'] }}>
+      <input type="submit" value="Submit">
+    </div>
+  </form>
+  {% endif %}
   <header>
     <h1>Reviews</h1>
     <span>
