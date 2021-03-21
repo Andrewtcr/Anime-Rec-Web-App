@@ -287,14 +287,14 @@ def post():
 def recommend_animes():
   genres = request.form['genres'].strip()
   exclude = request.form['exclude'].strip()
-  minRating = request.form['min_rating'].strip()
+  minRating = request.form['min_rating']
   listGenres = genres.split(", ")
   excludeGenres = exclude.split(", ")
   error = None
 
   minNum = 0.0
-  if minRating is None:
-    minNum = float(0)
+  if minRating is '':
+    minNum = 0.0
   else:
     minNum = float(minRating)
 
