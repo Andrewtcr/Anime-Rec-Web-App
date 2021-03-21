@@ -177,6 +177,12 @@ def admin_login():
 
   return render_template('admin_login.html')
 
+@app.route('/edit_history')
+def edit_history():
+  deleted = g.conn.execute('SELECT * FROM delete NATURAL JOIN administrator NATURAL JOIN review').fetchall()
+  modified = g.conn.execute('SELECT * FROM modify NATURAL JOIN administrator NATURAL JOIN review').fetchall()
+  return render_template('edit_history.html', deleted=deleted, modified=modified)
+
 @app.route('/anime') 
 def generate_page():
   anime_id = request.args.get('anime_id')
@@ -358,8 +364,8 @@ def del_review():
   flash(msg)
   return redirect('anime?anime_id={}'.format(anime_id))
 
-@app.route('/modify', methods=['GET', 'POST'])
-def modify():
+@app.route('/modifyReview', methods=['GET', 'POST'])
+def modifyReview():
   if request.method == 'POST':
     anime_id = request.form['anime_id']
     review_id = request.form['review_id']
@@ -375,8 +381,8 @@ def modify():
       g.conn.execute(
         'UPDATE review SET text = %s WHERE review_id = %s', text, review_id
       )
-
-      if g.admin:
+      alreadyModified = g.conn.execute('SELECT * FROM modify WHERE admin_id = %s AND review_id = %s', g.admin['admin_id'], review_id).fetchone()
+      if g.admin and not alreadyModified:
         g.conn.execute(
           'INSERT INTO modify VALUES(%s, %s)', review_id, g.admin['admin_id']
         )
@@ -389,7 +395,7 @@ def modify():
   text = g.conn.execute(
     'SELECT text FROM review WHERE review_id = %s', review_id
   ).fetchone()['text']
-  return render_template('modify.html', text=text, review_id=review_id, anime_id=anime_id)  
+  return render_template('modifyReview.html', text=text, review_id=review_id, anime_id=anime_id)  
 
 @app.route('/search', methods=['POST'])
 def recommend_animes():

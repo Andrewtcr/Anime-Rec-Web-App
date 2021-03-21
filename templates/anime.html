@@ -60,7 +60,7 @@
       <p class="body">{{ comment['text'] }}</p>
       <i>{{ comment['email'] }}</i>
       {% if g.admin or g.account['account_id'] == comment['account_id'] %}
-        <a href={{ "/modify?comment_id={}&anime_id={}".format(comment['comment_id'], anime['anime_id']) }}>Edit</a> | 
+        <a href={{ "/modifyReview?comment_id={}&anime_id={}".format(comment['comment_id'], anime['anime_id']) }}>Edit</a> | 
         <a href={{ "/delete?comment_id={}&anime_id={}".format(comment['comment_id'], anime['anime_id']) }}>Delete</a>
       {% endif %}
     </article>
