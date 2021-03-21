@@ -369,24 +369,23 @@ def modify():
     if not text:
       error = "Text is required."
 
-    if not error:
+    if error is not None:
       flash(error)
     else:
       g.conn.execute(
         'UPDATE review SET text = %s WHERE review_id = %s', text, review_id
       )
 
-      g.conn.execute(
-        'INSERT INTO modify VALUES(%s, %s)', review_id, g.admin['admin_id']
-      )
+      if g.admin:
+        g.conn.execute(
+          'INSERT INTO modify VALUES(%s, %s)', review_id, g.admin['admin_id']
+        )
 
       flash('Comment successfully updated.')
       return redirect('anime?anime_id={}'.format(anime_id))
 
   review_id = request.args['review_id']
-  anime_id = g.conn.execute(
-    'SELECT anime_id FROM describes WHERE review_id = %s', review_id
-  ).fetchone()['anime_id']
+  anime_id = request.args['anime_id']
   text = g.conn.execute(
     'SELECT text FROM review WHERE review_id = %s', review_id
   ).fetchone()['text']
