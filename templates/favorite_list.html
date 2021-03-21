@@ -5,11 +5,11 @@
 {% endblock %}
 
 {% block content %} 
-  <ol>
+  <ul>
     {% for anime in favoriteAnimes %}
     <li>
       <a href={{ "/anime?anime_id={}".format(anime[0]) }}>{{anime[1]}}</a>
     </li>
     {% endfor %}
-  </ol>
+  </ul>
 {% endblock %} 

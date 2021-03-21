@@ -182,9 +182,6 @@ def generate_page():
   anime_id = request.args.get('anime_id')
   anime = g.conn.execute('SELECT * FROM anime WHERE anime_id = %s', anime_id).fetchone()
 
-  print(type(anime))
-  print(anime['anime_id'])
-
   reviews = g.conn.execute(
     'SELECT *'
     ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
@@ -342,21 +339,20 @@ def post():
 def del_review():
   review_id = request.args.get('review_id')
   comment_id = request.args.get('comment_id')
-  anime_id = str(request.form['anime_id'])
+  anime_id = request.args.get('anime_id')
   msg = 'Review deleted!'
   if g.admin:
       admin_id = session.get('admin_id')
       if review_id:
           g.conn.execute('INSERT INTO deletes VALUES(%s, %s)', review_id, admin_id)
-          g.conn.execute('DELETE FROM review WHERE review_id = %s', review_id)
-      if comment_id:
+          g.conn.execute('UPDATE review SET deleted = TRUE WHERE review_id = %s', review_id)
+      else:
           g.conn.execute('DELETE FROM comment WHERE comment_id = %s', comment_id)
           msg = 'Comment deleted!'
   else:
-      account_id = session.get('account_id')
       if review_id:
-          g.conn.execute('DELETE FROM review WHERE review_id = %s', review_id)
-      if comment_id:
+          g.conn.execute('UPDATE review SET deleted = TRUE WHERE review_id = %s', review_id)
+      else:
           g.conn.execute('DELETE FROM comment WHERE comment_id = %s', comment_id)
           msg = 'Comment deleted!'
   flash(msg)
