@@ -2,40 +2,14 @@
 
 {% block header %}
   <h1>{% block title %}Recommendations{% endblock %}</h1>
-  <span>Rating: {{anime['avg_rating']}}/10</span>
 {% endblock %}
 
-{% block content %}
-  <header>
-    <h1>Reviews</h1>
-    <span>
-      {% if g.account %}
-        <a class="action" href={{write_url}}>Write</a>
-      {% endif %}
-    </span>
-  </header>
-  {% for review in reviews %}
-    <article class="post">
-      <p class="body">{{ review['text'] }}</p>
-    </article>
-    {% if not loop.last %}
-      <hr>
-    {% endif %}
-  {% endfor %}
-  <header>
-    <h1>Comments</h1>
-    <span>
-      {% if g.account %}
-        <a class="action" href={{post_url}}>Post</a>
-      {% endif %}
-    </span>
-  </header>
-  {% for comment in comments %}
-    <article class="post">
-      <p class="body">{{ comment['text'] }}</p>
-    </article>
-    {% if not loop.last %}
-      <hr>
-    {% endif %}
-  {% endfor %}
-{% endblock %}
+{% block content %} 
+  <ol>
+    {% for anime in recommendedAnimes %}
+    <li>
+      <a href={{ "/anime?anime_id={}".format(anime[0]) }}>{{anime[1]}}</a>
+    </li>
+    {% endfor %}
+  </ol>
+{% endblock %} 
