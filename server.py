@@ -456,8 +456,6 @@ def lookup():
       ' ORDER BY CAST(anime_id AS INTEGER)', '%'+anime_in+'%'
     ).fetchall()
 
-    print(animes)
-
     x = []  
     for row in animes:
       s = ''
