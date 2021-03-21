@@ -200,7 +200,7 @@ def rate():
 
   # update avg_rating in anime
   g.conn.execute(
-    'UPDATE anime SET avg_rating = %s', str(avg)
+    'UPDATE anime SET avg_rating = %s WHERE anime_id = %s', str(avg), anime_id
   )
   flash(msg)
   return redirect('anime?anime_id={}'.format(anime_id))
