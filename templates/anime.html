@@ -40,6 +40,9 @@
       {% if g.admin or g.account['account_id'] == review['account_id'] %}
         <a href={{ "/edit?review_id=".format(review['review_id']) }}>Edit</a> | 
         <a href={{ "/delete?review_id=".format(review['review_id']) }}>Delete</a>
+          <div>
+            <input type="hidden" name="anime_id" value={{ anime['anime_id'] }}>
+          </div>
       {% endif %}
     </article>
     {% if not loop.last %}
@@ -62,6 +65,11 @@
       {% if g.admin or g.account['account_id'] == comment['account_id'] %}
         <a href={{ "/edit?comment_id=".format(comment['comment_id']) }}>Edit</a> | 
         <a href={{ "/delete?comment_id=".format(comment['comment_id']) }}>Delete</a>
+        <form method="POST" action="/favorite">
+          <div>
+            <input type="hidden" name="anime_id" value={{ anime['anime_id'] }}>
+          </div>
+        </form>
       {% endif %}
     </article>
     {% if not loop.last %}

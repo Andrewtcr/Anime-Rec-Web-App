@@ -180,11 +180,7 @@ def admin_login():
 @app.route('/anime') 
 def generate_page():
     anime_id = request.args.get('anime_id')
-    anime = g.conn.execute(
-        text(
-            'SELECT * FROM anime WHERE anime_id = :x'
-        ), x=anime_id
-    )
+    anime = g.conn.execute('SELECT * FROM anime WHERE anime_id = %s', str(anime_id)).fetchone()
 
     reviews = g.conn.execute(
       'SELECT *'
@@ -343,12 +339,31 @@ def post():
 def delete():
   review_id = request.args.get('review_id')
   comment_id = request.args.get('comment_id')
-
+  anime_id = str(request.form['anime_id'])
+  msg = 'Review deleted!'
+  if g.admin:
+      admin_id = session.get('admin_id')
+      if review_id:
+          g.conn.execute('INSERT INTO deletes VALUES(%s, %s)', review_id, admin_id)
+          g.conn.execute('DELETE FROM review WHERE review_id = %s', review_id)
+      if comment_id:
+          g.conn.execute('DELETE FROM comment WHERE comment_id = %s', comment_id)
+          msg = 'Comment deleted!'
+  else:
+      account_id = session.get('account_id')
+      if review_id:
+          g.conn.execute('DELETE FROM review WHERE review_id = %s', review_id)
+      if comment_id:
+          g.conn.execute('DELETE FROM comment WHERE comment_id = %s', comment_id)
+          msg = 'Comment deleted!'
+  flash(msg)
+  return redirect('anime?anime_id={}'.format(anime_id))
+'''
 @app.route('/edit')
 def edit():
   review_id = request.args.get('review_id')
   comment_id = request.args.get('comment_id')
-
+'''
 @app.route('/search', methods=['POST'])
 def recommend_animes():
   genres = request.form['genres'].strip()
