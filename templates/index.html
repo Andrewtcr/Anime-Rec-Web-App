@@ -28,8 +28,11 @@
     <input type="submit" value="Submit">
   </p>
 </form>
-
 </body>
+
+{% if not g.account and not g.admin%}
+<footer ali><a href='/admin_login'>Admin-Login</a></footer>
+{% endif %}
 {% endblock %}
 
 </html>

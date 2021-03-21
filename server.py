@@ -12,7 +12,7 @@ import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
-from flask import Flask, request, render_template, g, redirect, Response, flash, session, url_for
+from flask import Flask, request, render_template, g, redirect, Response, flash, session
 
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
@@ -59,6 +59,15 @@ def before_request():
   else:
       g.account = g.conn.execute(text(
           'SELECT * FROM account WHERE account_id = :x'), x=account_id
+      ).fetchone()
+  
+  admin_id = session.get('admin_id')
+
+  if admin_id is None:
+      g.admin = None
+  else:
+      g.admin = g.conn.execute(
+        'SELECT * FROM administrator WHERE admin_id = %s', admin_id
       ).fetchone()
 
 @app.teardown_request
@@ -141,6 +150,32 @@ def register():
 def logout():
     session.clear()
     return redirect('index')
+  
+@app.route('/admin_login', methods=['GET', 'POST'])
+def admin_login():
+  if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        error = None
+        account = g.conn.execute(
+          text(
+            'SELECT * FROM administrator WHERE email = :x'
+          ), x=email
+        ).fetchone()
+
+        if account is None:
+            error = 'Incorrect email.'
+        elif account['password'] != password:
+            error = 'Incorrect password.'
+
+        if error is None:
+            session.clear()
+            session['admin_id'] = account['admin_id']
+            return redirect('index')
+
+        flash(error) 
+
+  return render_template('admin_login.html')
 
 @app.route('/anime') 
 def generate_page():
@@ -149,19 +184,21 @@ def generate_page():
         text(
             'SELECT * FROM anime WHERE anime_id = :x'
         ), x=anime_id
-    ).fetchone()
+    )
 
     reviews = g.conn.execute(
       'SELECT *'
       ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
+      ' NATURAL JOIN account'
       ' WHERE anime_id = %s AND deleted = FALSE', anime_id
-    ).fetchall()
+    )
 
     comments = g.conn.execute(
       'SELECT *'
       ' FROM anime NATURAL JOIN belongs NATURAL JOIN comment NATURAL JOIN posts'
+      ' NATURAL JOIN account'
       ' WHERE anime_id = %s', anime_id
-    ).fetchall()
+    )
 
     write_url = "write?anime_id=" + str(anime_id)
     post_url = "post?anime_id=" + str(anime_id)
@@ -282,6 +319,16 @@ def post():
 
     anime_id = request.args.get('anime_id')
     return render_template('post.html', anime_id=anime_id)
+
+@app.route('/delete')
+def delete():
+  review_id = request.args.get('review_id')
+  comment_id = request.args.get('comment_id')
+
+@app.route('/edit')
+def edit():
+  review_id = request.args.get('review_id')
+  comment_id = request.args.get('comment_id')
 
 @app.route('/search', methods=['POST'])
 def recommend_animes():
