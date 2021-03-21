@@ -255,8 +255,10 @@ def recommend_animes():
   excludeGenres = exclude.split(", ")
   error = None
 
-  minNum = 0
+  minNum = 0.0
   if minRating is None:
+    minNum = float(0)
+  else:
     minNum = float(minRating)
 
   if not genres:
@@ -277,7 +279,7 @@ def recommend_animes():
           ' FROM (SELECT anime_id, anime_name, num_episodes, avg_rating, COUNT(genre) FROM anime NATURAL JOIN anime_genre '
           ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres) AND avg_rating > %s AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres) '
           ' GROUP BY anime_id, anime_name, num_episodes, avg_rating '
-          ' ORDER BY COUNT(genre) ) as foo ', str(minNum)
+          ' ORDER BY COUNT(genre) ) as foo ', minNum
       ).fetchall()
 
     g.conn.execute('DROP TABLE DesiredGenres')
