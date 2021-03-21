@@ -293,7 +293,7 @@ def recommend_animes():
   error = None
 
   minNum = 0.0
-  if minRating is None:
+  if not minRating:
     minNum = float(0)
   else:
     minNum = float(minRating)
