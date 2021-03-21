@@ -179,15 +179,8 @@ def admin_login():
 
 @app.route('/anime') 
 def generate_page():
-<<<<<<< HEAD
   anime_id = request.args.get('anime_id')
-  anime = g.conn.execute(
-    'SELECT * FROM anime WHERE anime_id = %s', anime_id
-  ).fetchone()
-=======
-    anime_id = request.args.get('anime_id')
-    anime = g.conn.execute('SELECT * FROM anime WHERE anime_id = %s', str(anime_id)).fetchone()
->>>>>>> 44136010dbddd888b664f455dd9aa22cb93c68cc
+  anime = g.conn.execute('SELECT * FROM anime WHERE anime_id = %s', anime_id).fetchone()
 
   print(type(anime))
   print(anime['anime_id'])
@@ -253,7 +246,7 @@ def favorite():
   anime_id = str(request.form['anime_id'])
   name = str(request.form['name'])
 
-  msg = 'Added to your favorites list!'.format(name)
+  msg = 'Added to your favorites list!'
 
   # update ratings in rates
   if g.conn.execute(
@@ -346,7 +339,7 @@ def post():
     return render_template('post.html', anime_id=anime_id)
 
 @app.route('/delete')
-def delete():
+def del_review():
   review_id = request.args.get('review_id')
   comment_id = request.args.get('comment_id')
   anime_id = str(request.form['anime_id'])
@@ -368,24 +361,41 @@ def delete():
           msg = 'Comment deleted!'
   flash(msg)
   return redirect('anime?anime_id={}'.format(anime_id))
-'''
-@app.route('/edit')
-def edit():
-  review_id = request.args.get('review_id')
-  comment_id = request.args.get('comment_id')
-<<<<<<< HEAD
-  
-  if review_id:
-    review = g.conn.execute(
-      'SELECT * FROM review NATURAL JOIN describes'
-      ' WHERE review = %s AND deleted = FALSE', review_id
-    )
-    render_template('edit.html', text=review['text'])
 
+@app.route('/modify', methods=['GET', 'POST'])
+def modify():
+  if request.method == 'POST':
+    anime_id = request.form['anime_id']
+    review_id = request.form['review_id']
+    text = request.form['text'].strip()
+    error = None
 
-=======
-'''
->>>>>>> 44136010dbddd888b664f455dd9aa22cb93c68cc
+    if not text:
+      error = "Text is required."
+
+    if not error:
+      flash(error)
+    else:
+      g.conn.execute(
+        'UPDATE review SET text = %s WHERE review_id = %s', text, review_id
+      )
+
+      g.conn.execute(
+        'INSERT INTO modify VALUES(%s, %s)', review_id, g.admin['admin_id']
+      )
+
+      flash('Comment successfully updated.')
+      return redirect('anime?anime_id={}'.format(anime_id))
+
+  review_id = request.args['review_id']
+  anime_id = g.conn.execute(
+    'SELECT anime_id FROM describes WHERE review_id = %s', review_id
+  ).fetchone()['anime_id']
+  text = g.conn.execute(
+    'SELECT text FROM review WHERE review_id = %s', review_id
+  ).fetchone()['text']
+  return render_template('modify.html', text=text, review_id=review_id, anime_id=anime_id)  
+
 @app.route('/search', methods=['POST'])
 def recommend_animes():
   genres = request.form['genres'].strip()
