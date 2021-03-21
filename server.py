@@ -205,6 +205,25 @@ def rate():
   flash(msg)
   return redirect('anime?anime_id={}'.format(anime_id))
 
+@app.route('/favorite', methods=['POST'])
+def favorite():
+  anime_id = str(request.form['anime_id'])
+  name = str(request.form['name'])
+
+  msg = 'Added to your favorites list!'.format(name)
+
+  # update ratings in rates
+  if g.conn.execute(
+      'SELECT account_id FROM favourite_anime WHERE anime_id = %s AND account_id = %s', anime_id, 
+      g.account['account_id']
+    ).fetchone() is None:
+    g.conn.execute(
+      'INSERT INTO favourite_anime VALUES (%s, %s)', g.account['account_id'], anime_id
+    )
+
+  flash(msg)
+  return redirect('anime?anime_id={}'.format(anime_id))
+
 @app.route('/write', methods=('GET', 'POST'))
 def write():
     if request.method == 'POST':
@@ -349,6 +368,15 @@ def lookup():
       return render_template('/anime_list.html', animes=anime, anime_in=anime_in)
   
   return redirect('index')
+
+@app.route('/view_favorites') 
+def view_favourites():
+    account_id = session.get('account_id')
+    favoriteAnimes = g.conn.execute(
+            'SELECT anime_id, anime_name FROM anime NATURAL JOIN favourite_anime WHERE account_id = %s', account_id
+    ).fetchall()
+
+    return render_template('/favorite_list.html', favoriteAnimes=favoriteAnimes)
 
 if __name__ == "__main__":
   import click
