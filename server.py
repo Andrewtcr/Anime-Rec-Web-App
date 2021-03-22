@@ -456,21 +456,39 @@ def recommend_animes():
         g.conn.execute('INSERT INTO BadGenres VALUES(%s)', badgenre)
 
     animes = g.conn.execute( # orders anime by number of relevant genres
-          ' SELECT anime_id, anime_name, num_episodes, avg_rating'
-          ' FROM (SELECT anime_id, anime_name, num_episodes, avg_rating, COUNT(genre) FROM anime NATURAL JOIN anime_genre '
+          ' SELECT anime_id, anime_name, num_episodes, avg_rating, n'
+          ' FROM (SELECT anime_id, anime_name, num_episodes, avg_rating, COUNT(genre) AS n FROM anime NATURAL JOIN anime_genre '
           ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres) AND avg_rating > %s AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres) '
           ' GROUP BY anime_id, anime_name, num_episodes, avg_rating '
           ' ORDER BY COUNT(genre) DESC) as foo', minNum
     ).fetchall()
 
+    if not animes:
+      flash('Genre(s) do not exist. Pro tip: seperate your genres by \", \"')
+      g.conn.execute('DROP TABLE DesiredGenres')
+      g.conn.execute('DROP TABLE BadGenres')
+      return redirect('index')
+
     genres = g.conn.execute(
       'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre'
-      ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres)'
-      ' AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres)'
-      ' AND avg_rating > %s', minNum
+      ' WHERE avg_rating > %s', minNum
     ).fetchall()
 
+    # sort by rating for equal num of relevant genres
+    cur_max_N = animes[0]['n']
+    for i in range(0, len(animes)):
+      if animes[i]['n'] != cur_max_N:
+        cur_max_N = animes[i]['n']
+      j = i+1
+      while j < len(animes) and animes[j]['n'] == cur_max_N:
+        if animes[j]['avg_rating'] > animes[i]['avg_rating']:
+          tmp = animes[i]
+          animes[i] = animes[j]
+          animes[j] = tmp
+        j += 1
+
     x = []  
+    i = 0
     for row in animes:
       s = ''
       for genre in genres:
@@ -480,6 +498,9 @@ def recommend_animes():
       li.append(s[:-2])
       t = tuple(li)
       x.append(t)
+      i += 1
+      if i == 100:
+        break
 
     g.conn.execute('DROP TABLE DesiredGenres')
     g.conn.execute('DROP TABLE BadGenres')
@@ -509,7 +530,7 @@ def lookup():
       ' WHERE UPPER(anime_name) LIKE UPPER(%s)'
       ' ORDER BY CAST(anime_id AS INTEGER)', anime_in+'%'
     ).fetchall()
-
+    
     x = []  
     i = 0
     for row in animes:
