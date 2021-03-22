@@ -453,13 +453,13 @@ def lookup():
   else:
     animes = g.conn.execute(
       'SELECT * FROM anime WHERE UPPER(anime_name) LIKE UPPER(%s)'
-      ' ORDER BY CAST(anime_id AS INTEGER)', '%'+anime_in+'%'
+      ' ORDER BY CAST(anime_id AS INTEGER)', anime_in+'%'
     ).fetchall()
     
     genres = g.conn.execute(
       'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre'
       ' WHERE UPPER(anime_name) LIKE UPPER(%s)'
-      ' ORDER BY CAST(anime_id AS INTEGER)', '%'+anime_in+'%'
+      ' ORDER BY CAST(anime_id AS INTEGER)', anime_in+'%'
     ).fetchall()
 
     x = []  
