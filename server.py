@@ -179,8 +179,14 @@ def admin_login():
 
 @app.route('/edit_history')
 def edit_history():
-  deleted = g.conn.execute('SELECT * FROM delete NATURAL JOIN administrator NATURAL JOIN review').fetchall()
-  modified = g.conn.execute('SELECT * FROM modify NATURAL JOIN administrator NATURAL JOIN review').fetchall()
+  deleted = g.conn.execute(
+    'SELECT * FROM delete NATURAL JOIN administrator NATURAL JOIN review'
+    ' ORDER BY CAST(review_id AS INTEGER) DESC'
+  ).fetchall()
+  modified = g.conn.execute(
+    'SELECT * FROM modify NATURAL JOIN administrator NATURAL JOIN review'
+    ' ORDER BY CAST(review_id AS INTEGER) DESC'
+  ).fetchall()
   return render_template('edit_history.html', deleted=deleted, modified=modified)
 
 @app.route('/anime') 
@@ -192,14 +198,16 @@ def generate_page():
     'SELECT *'
     ' FROM anime NATURAL JOIN describes NATURAL JOIN review NATURAL JOIN writes'
     ' NATURAL JOIN account'
-    ' WHERE anime_id = %s AND deleted = FALSE', anime_id
+    ' WHERE anime_id = %s AND deleted = FALSE'
+    ' ORDER BY CAST(review_id AS INTEGER) DESC', anime_id
   )
 
   comments = g.conn.execute(
     'SELECT *'
     ' FROM anime NATURAL JOIN belongs NATURAL JOIN comment NATURAL JOIN posts'
     ' NATURAL JOIN account'
-    ' WHERE anime_id = %s', anime_id
+    ' WHERE anime_id = %s'
+    ' ORDER BY CAST(comment_id AS INTEGER) DESC', anime_id
   )
 
   write_url = "write?anime_id=" + str(anime_id)
@@ -458,20 +466,20 @@ def recommend_animes():
     animes = g.conn.execute( # orders anime by number of relevant genres
           ' SELECT anime_id, anime_name, num_episodes, avg_rating, n'
           ' FROM (SELECT anime_id, anime_name, num_episodes, avg_rating, COUNT(genre) AS n FROM anime NATURAL JOIN anime_genre '
-          ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres) AND avg_rating > %s AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres) '
+          ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres) AND avg_rating >= %s AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres) '
           ' GROUP BY anime_id, anime_name, num_episodes, avg_rating '
           ' ORDER BY COUNT(genre) DESC) as foo', minNum
     ).fetchall()
 
     if not animes:
-      flash('Genre(s) do not exist. Pro tip: seperate your genres by \", \"')
+      flash('No animes found. Pro tip: seperate your genres by \", \"')
       g.conn.execute('DROP TABLE DesiredGenres')
       g.conn.execute('DROP TABLE BadGenres')
       return redirect('index')
 
     genres = g.conn.execute(
       'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre'
-      ' WHERE avg_rating > %s', minNum
+      ' WHERE avg_rating >= %s', minNum
     ).fetchall()
 
     # sort by rating for equal num of relevant genres
