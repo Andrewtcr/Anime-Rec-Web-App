@@ -381,13 +381,16 @@ def modifyReview():
       g.conn.execute(
         'UPDATE review SET text = %s WHERE review_id = %s', text, review_id
       )
-      alreadyModified = g.conn.execute('SELECT * FROM modify WHERE admin_id = %s AND review_id = %s', g.admin['admin_id'], review_id).fetchone()
+      
+      if g.admin:
+        alreadyModified = g.conn.execute('SELECT * FROM modify WHERE admin_id = %s AND review_id = %s', g.admin['admin_id'], review_id).fetchone()
+      
       if g.admin and not alreadyModified:
         g.conn.execute(
           'INSERT INTO modify VALUES(%s, %s)', review_id, g.admin['admin_id']
         )
 
-      flash('Comment successfully updated.')
+      flash('Review successfully updated.')
       return redirect('anime?anime_id={}'.format(anime_id))
 
   review_id = request.args['review_id']
