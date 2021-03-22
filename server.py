@@ -425,18 +425,36 @@ def recommend_animes():
     for badgenre in excludeGenres:
         g.conn.execute('INSERT INTO BadGenres VALUES(%s)', badgenre)
 
-    recommendedAnimes = g.conn.execute(
+    animes = g.conn.execute( # orders anime by number of relevant genres
           ' SELECT anime_id, anime_name, num_episodes, avg_rating'
           ' FROM (SELECT anime_id, anime_name, num_episodes, avg_rating, COUNT(genre) FROM anime NATURAL JOIN anime_genre '
           ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres) AND avg_rating > %s AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres) '
           ' GROUP BY anime_id, anime_name, num_episodes, avg_rating '
-          ' ORDER BY COUNT(genre) ) as foo ', minNum
-      ).fetchall()
+          ' ORDER BY COUNT(genre) DESC) as foo', minNum
+    ).fetchall()
+
+    genres = g.conn.execute(
+      'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre'
+      ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres)'
+      ' AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres)'
+      ' AND avg_rating > %s', minNum
+    ).fetchall()
+
+    x = []  
+    for row in animes:
+      s = ''
+      for genre in genres:
+        if row['anime_id'] == genre['anime_id']:
+          s += genre['genre'] + ', '
+      li = list(row)
+      li.append(s[:-2])
+      t = tuple(li)
+      x.append(t)
 
     g.conn.execute('DROP TABLE DesiredGenres')
     g.conn.execute('DROP TABLE BadGenres')
 
-    return render_template('recommendations.html', recommendedAnimes=recommendedAnimes)
+    return render_template('recommendations.html', animes=x)
   
   return redirect('index')
 
@@ -463,11 +481,12 @@ def lookup():
     ).fetchall()
 
     x = []  
+    i = 0
     for row in animes:
       s = ''
-      for genre in genres:
-        if row['anime_id'] == genre['anime_id']:
-          s += genre['genre'] + ', '
+      while i < len(genres) and genres[i]['anime_id'] == row['anime_id']:
+        s += genres[i]['genre'] + ', '
+        i += 1
       li = list(row)
       li.append(s[:-2])
       t = tuple(li)
