@@ -381,13 +381,16 @@ def modifyReview():
       g.conn.execute(
         'UPDATE review SET text = %s WHERE review_id = %s', text, review_id
       )
-      alreadyModified = g.conn.execute('SELECT * FROM modify WHERE admin_id = %s AND review_id = %s', g.admin['admin_id'], review_id).fetchone()
+      
+      if g.admin:
+        alreadyModified = g.conn.execute('SELECT * FROM modify WHERE admin_id = %s AND review_id = %s', g.admin['admin_id'], review_id).fetchone()
+      
       if g.admin and not alreadyModified:
         g.conn.execute(
           'INSERT INTO modify VALUES(%s, %s)', review_id, g.admin['admin_id']
         )
 
-      flash('Comment successfully updated.')
+      flash('Review successfully updated.')
       return redirect('anime?anime_id={}'.format(anime_id))
 
   review_id = request.args['review_id']
@@ -395,7 +398,34 @@ def modifyReview():
   text = g.conn.execute(
     'SELECT text FROM review WHERE review_id = %s', review_id
   ).fetchone()['text']
-  return render_template('modifyReview.html', text=text, review_id=review_id, anime_id=anime_id)  
+  return render_template('modifyReview.html', text=text, review_id=review_id, anime_id=anime_id)
+
+@app.route('/modifyComment', methods=['GET', 'POST'])
+def modifyComment():
+  if request.method == 'POST':
+    anime_id = request.form['anime_id']
+    comment_id = request.form['comment_id']
+    text = request.form['text'].strip()
+    error = None
+
+    if not text:
+      error = "Text is required."
+
+    if error is not None:
+      flash(error)
+    else:
+      g.conn.execute(
+        'UPDATE comment SET text = %s WHERE comment_id = %s', text, comment_id
+      )
+      flash('Comment successfully updated.')
+      return redirect('anime?anime_id={}'.format(anime_id))
+
+  comment_id = request.args['comment_id']
+  anime_id = request.args['anime_id']
+  text = g.conn.execute(
+    'SELECT text FROM comment WHERE comment_id = %s', comment_id
+  ).fetchone()['text']
+  return render_template('modifyComment.html', text=text, comment_id=comment_id, anime_id=anime_id)  
 
 @app.route('/search', methods=['POST'])
 def recommend_animes():
