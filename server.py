@@ -498,7 +498,7 @@ def recommend_animes():
 
     genres = g.conn.execute(
       'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre' 
-      ' WHERE avg_rating > %s', minNum
+      ' WHERE avg_rating >= %s', minNum
     ).fetchall()
 
     # sort by rating for equal num of relevant genres
