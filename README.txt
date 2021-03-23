@@ -1,7 +1,7 @@
 README
 *Authors: Andrew Tang and Raymond Fang
 PostgreSQL Account for Database: at3456
-WebApp URL: 
+WebApp URL: http://35.229.87.203:8111/
 
 Description of Parts Implemented:
 - Account holders can favourite and rate animes. 'Favourites page'. 
