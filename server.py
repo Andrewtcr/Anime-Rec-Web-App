@@ -458,17 +458,36 @@ def recommend_animes():
   else:
     g.conn.execute('CREATE TEMPORARY TABLE DesiredGenres (genre varchar(20) not null, primary key(genre))')
     g.conn.execute('CREATE TEMPORARY TABLE BadGenres (genre varchar(20) not null, primary key(genre))')
+
+    s = 'INSERT INTO DesiredGenres VALUES '
     for genre in listGenres:
-        g.conn.execute('INSERT INTO DesiredGenres VALUES(%s)', genre)
-    for badgenre in excludeGenres:
-        g.conn.execute('INSERT INTO BadGenres VALUES(%s)', badgenre)
+      s += '(\'{}\'), '.format(genre.strip())
+    s = s[:-2] + ';'
+    g.conn.execute(s)
+
+    s = 'INSERT INTO BadGenres VALUES '
+    for genre in excludeGenres:
+      s += '(\'{}\'), '.format(genre.strip())
+    s = s[:-2] + ';'
+    g.conn.execute(s)
+    
+    # cleanup duplicates 
+    g.conn.execute(
+      'DELETE FROM DesiredGenres WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM BadGenres)'
+    )
 
     animes = g.conn.execute( # orders anime by number of relevant genres
-          ' SELECT anime_id, anime_name, num_episodes, avg_rating, n'
-          ' FROM (SELECT anime_id, anime_name, num_episodes, avg_rating, COUNT(genre) AS n FROM anime NATURAL JOIN anime_genre '
-          ' WHERE UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres) AND avg_rating >= %s AND UPPER(genre) NOT IN (SELECT UPPER(genre) FROM BadGenres) '
-          ' GROUP BY anime_id, anime_name, num_episodes, avg_rating '
-          ' ORDER BY COUNT(genre) DESC) as foo', minNum
+          'SELECT DISTINCT(anime_id), anime_name, num_episodes, avg_rating,'
+          '   SUM(CASE WHEN UPPER(genre) IN (SELECT UPPER(genre) FROM DesiredGenres) THEN 1'
+          '            ELSE 0 END) AS n'
+          ' FROM anime NATURAL JOIN anime_genre'
+          ' WHERE anime_id IN (SELECT anime_id FROM anime_genre a JOIN DesiredGenres d'
+          '                       ON UPPER(a.genre) = UPPER(d.genre))'
+          '   AND anime_id NOT IN (SELECT anime_id FROM anime_genre a JOIN BadGenres b'
+          '                       ON UPPER(a.genre) = UPPER(b.genre))'
+          '   AND avg_rating >= %s'
+          ' GROUP BY anime_id, anime_name, num_episodes, avg_rating'
+          ' ORDER BY n DESC', minNum
     ).fetchall()
 
     if not animes:
@@ -478,8 +497,8 @@ def recommend_animes():
       return redirect('index')
 
     genres = g.conn.execute(
-      'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre'
-      ' WHERE avg_rating >= %s', minNum
+      'SELECT anime_id, genre FROM anime NATURAL JOIN anime_genre' 
+      ' WHERE avg_rating > %s', minNum
     ).fetchall()
 
     # sort by rating for equal num of relevant genres
@@ -501,7 +520,7 @@ def recommend_animes():
       s = ''
       for genre in genres:
         if row['anime_id'] == genre['anime_id']:
-          s += genre['genre'] + ', '
+          s += genre[1] + ', '
       li = list(row)
       li.append(s[:-2])
       t = tuple(li)
